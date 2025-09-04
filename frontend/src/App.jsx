@@ -9,6 +9,16 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
 
+  const stepMessages = [
+    "📂 Creating project folder...",
+    "📝 Generating base structure...",
+    "📦 Adding configuration files...",
+    "🎨 Writing stylesheets...",
+    "⚡ Building JavaScript logic...",
+    "🚀 Finalizing project files...",
+    "🗜️ Zipping project for download...",
+  ];
+
   const handleSubmit = async () => {
     if (!prompt.trim()) {
       toast.error("Please enter a project idea before generating.");
@@ -26,28 +36,28 @@ function App() {
         body: JSON.stringify({ prompt }),
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to connect to backend");
-      }
+      if (!res.ok) throw new Error("Failed to generate project");
 
       setStatus("Creating your code files...");
-      const data = await res.json();
 
-      setLoading(false);
+      // Convert stream to blob
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
 
-      if (data.downloadUrl) {
-        setStatus("Almost done, preparing download...");
-        setDownloadUrl(import.meta.env.VITE_API_BASE_URL + data.downloadUrl);
-        toast.success("Project generated successfully!");
-        setStatus("✅ Done! Your code is ready to download.");
-      } else {
-        throw new Error("No download URL received from backend");
-      }
+      // Create a download link
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "project.zip";
+      link.click();
+
+      setStatus("✅ Done! Your code is ready.");
+      toast.success("Project generated successfully!");
     } catch (err) {
       console.error(err);
-      setLoading(false);
       setStatus("❌ Something went wrong.");
       toast.error("Error generating project. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
